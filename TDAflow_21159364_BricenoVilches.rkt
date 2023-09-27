@@ -8,25 +8,33 @@
 ;Recorrido: flow (list)
 
 (define (flow id name-msg . Option)
-  (list id name-msg (remove-duplicates Option #:key getoption-code)))
+  (list id name-msg (remove-duplicates Option #:key getflowoption-code)))
 
 
 ;Función Flow - selector option code
 ;Función que toma el código de una opción para despues ser usada como llave en la revisión de duplicados
 ;Dominio: option (list)
 ;Recorrido: code (int)
-(define (getoption-code Option)
+(define (getflowoption-code Option)
   (car Option))
 
 
-; 
-;(define (añadir-opcion-flow flow opcion)
-; (reverse(cons option (reverse flow)))
+(define (juntar-flow-op flow option)
+  (reverse(cons option (reverse (getflow-options flow)))))
 
+(define (añadir-opcion-flow flow option)
+  (cons (getflow-id flow) (cons (getflow-namemsg flow) (cons (juntar-flow-op flow option) null))))
 
-(define op1(option 1 "Que quiere saber?" 1 1 "viajar" "descuentos" "sobre nosotros" ))
-(define op11 (option 1 "Empresa" 2 3 "sobre nosotros" ))
-(define op2 (option 2 "Buscas noticias?" 1 1 "noticias" "quiero ver noticias" "Busco noticias"))
-(define op3 (option 3 "O quieres saber sobre nuevas ofertas en supermercados?" 1 1 "ofertas"))
-(define f1 (flow 1 "Flujo1: prueba" op1 op1 op11 op2 op1 op11 op2 op3 op3))
-f1
+(define (no-opcion-duplicada? option list-opciones)
+   (not (member (car option) (map car list-opciones))))
+
+(define (getflow-options flow)
+   (caddr flow))
+
+(define (getflow-id flow)
+  (car flow))
+
+(define (getflow-namemsg flow)
+   (cadr flow))
+
+(provide getflowoption-code getflow-id añadir-opcion-flow getflow-options no-opcion-duplicada? juntar-flow-op all-defined-out)
