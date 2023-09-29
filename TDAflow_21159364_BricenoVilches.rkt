@@ -23,10 +23,12 @@
   (reverse(cons option (reverse (getflow-options flow)))))
 
 (define (añadir-opcion-flow flow option)
-  (cons (getflow-id flow) (cons (getflow-namemsg flow) (cons (juntar-flow-op flow option) null))))
+  (cons (getflow-id flow)
+        (cons (getflow-namemsg flow)
+              (cons (juntar-flow-op flow option) null))))
 
-(define (no-opcion-duplicada? option list-opciones)
-   (not (member (car option) (map car list-opciones))))
+(define (no-duplicado? elem list-elem)
+   (not (member (car elem) (map car list-elem))))
 
 (define (getflow-options flow)
    (caddr flow))
@@ -37,4 +39,4 @@
 (define (getflow-namemsg flow)
    (cadr flow))
 
-(provide getflowoption-code getflow-id añadir-opcion-flow getflow-options no-opcion-duplicada? juntar-flow-op all-defined-out)
+(provide getflowoption-code añadir-opcion-flow getflow-options getflow-id no-duplicado?)
