@@ -22,7 +22,7 @@
 ;Recorrido: flow (list)
 
 (define (flow id name-msg . Option)
-  (list id name-msg (remove-duplicates Option #:key getflowoption-code)))
+  (list id name-msg (sort (remove-duplicates Option #:key getflowoption-code) < #:key getflowoption-code))) ;Para que las opciones queden ordenadas por su id
 
 
 ;RF 4 TDA Flow - modificador
@@ -62,8 +62,11 @@
 ;Dominio:  name (string) X InitialChatbotCodeLink (Int) X chatbot* (0 o más chatbots)
 ;Recorrido: system (list)
 
-(define (system name InitialChatbotCodeLink users . chatbot)
-  (list name InitialChatbotCodeLink users chatbot))
+(define (system name InitialChatbotCodeLink . chatbots)
+  (list name InitialChatbotCodeLink
+        '() ;Lista usuarios vacía /(El system siempre se crea sin usuarios añadidos a este)
+        '() ;parámetro con la lista del usuario con su nombre y chathistory
+        (remove-duplicates chatbots #:key getchatbot-id)))
 
 
 ;RF 8 TDA system - modificador
@@ -76,28 +79,76 @@
       (añadir-chatbot-system system chatbot)
       system))
 
-;TDA usuario define (usuario nombre chatHistory)?
 
-(define op1(option 1 "Que quiere saber?" 1 1 "viajar" "descuentos" "sobre nosotros" ))
-(define op11 (option 1 "Empresa" 2 3 "sobre nosotros" ))
+
+;RF 9 TDA system - modificador
+;Función modificadora para añadir usuarios a un sistema
+;Dominio: system (list) X user (list)
+;Recorrido: system (list)
+
+(define (system-add-user system username)
+  (let ((user (crear-user username)))
+  (if (no-duplicado? user (getsystem-users system))
+      (añadir-user-system system user)
+      system)))
+
+
+;RF 10 TDA system - modificador
+;Función que añade un usuario al parámetro de usuario-logeado del sistema
+;Dominio: system (list) X user (list)
+;Recorrido: system (list) o texto de error (string)
+
+(define (system-login system username)
+  (let ((user (find-user (getsystem-users system) username)))
+    (if (null? user)
+        system
+        (if (logged? system)
+            system
+            (if (user-presente? system user)
+                system
+                (logear user system))))))
+
+
+;RF 11 TDA system - modificador
+;Función que crea una sesión abierta dentro del system
+;Dominio: system (list)
+;Recorrido: system (list)
+
+(define (system-logout system)
+  (logout-user system))
+
+
+
+
+(define op1(option 1 "Que quiere saber?" 0 3 "viajar" "descuentos" "sobre nosotros" ))
+(define op11 (option 4 "Empresa" 0 3 "sobre nosotros" ))
 (define op2 (option 2 "Buscas noticias?" 1 1 "noticias" "quiero ver noticias" "Busco noticias"))
 (define op3 (option 3 "O quieres saber sobre nuevas ofertas en supermercados?" 1 1 "ofertas"))
 (define f1 (flow 1 "Flujo1: prueba" op1 op1 op11 op2 op1 op11 op2))
 (define f1-new (flow-add-option f1 op3))
 (define a (getflow-options f1))
-(define f10 (flow 3 "Flujo1: mensaje de prueba"))
+(define f10 (flow 3 "Flujo1 Principal Chatbot1"))
 (define f11 (flow-add-option f10 op1))
 (define f12 (flow-add-option f11 op2))
-(define cb10 (chatbot 0 "Asistente" "Bienvenido\n¿Qué te gustaría hacer?" 1))
-(define cbtest (chatbot 2 "Asistente" "Bienvenido\n¿Qué te gustaría hacer?" 1))
-f1
-f12
-cb10
+(define cb10 (chatbot 0 "Asistente" "Bienvenido. ¿Qué te gustaría hacer?" 1))
+(define cbtest (chatbot 2 "Asistente" "Bienvenido. ¿Qué te gustaría hacer?" 1))
 
 (define cb11 (chatbot-add-flow cb10 f1))
 (define cb12 (chatbot-add-flow cb11 f1-new))
 (define cb13 (chatbot-add-flow cb12 f12))
-(define s1 (system "NewSystem" 2 '() cb13))
-(define user1 (user "admin" '()))
+(define s1 (system "NewSystem" 0 cb13))
 (define s11(system-add-chatbot s1 cbtest))
+(define s-user(system-add-user s11 "admin"))
+(define s-user1(system-add-user s-user "user1"))
+(define s-user2(system-add-user s-user1 "user2"))
+(define re(getsystem-chatbots s-user))
+(define usuario-log (system-login s-user1 "user1"));añade usuario admin a la lista de logeados
+usuario-log
+(define sss(getsystem-users usuario-log))
+(define usuario-log1 (system-login usuario-log "user1")) ;falla ya que hay alguien loggeado ya
+(define usuario-log2 (system-login s-user "user2")) ;falla ya que no encuentra al usuario en el sistema
+(define logout (system-logout usuario-log))
 
+
+
+(provide flow flow-add-option chatbot chatbot-add-flow system system-add-chatbot system-add-user system-login system-logout system-talk-rec system-talk-norec system-synthesis system-simulate)
