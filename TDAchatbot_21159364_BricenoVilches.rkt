@@ -2,41 +2,107 @@
 
 (require "TDAflow_21159364_BricenoVilches.rkt")
 
-;RF 5 Función Chatbot - constructor
-;Función crea un chatbot con una ID única, un nombre, mensaje, ID del flujo con el cual comienza y 0 o muchos flujos
-;Dominio: chatbotID (int) X name (String) X welcomeMessage (String) X startFlowId(int) X  flows* (0 o más flujos)
-;Recorrido: chatbot (list)
 
-(define (chatbot chatbotID name welcomeMessage startFlowId . flows)
-  (list chatbotID name welcomeMessage startFlowId flows))
+;Capa selector
 
 
+;Retorna el id de un chatbot
+;Dominio: chatbot (list)
+;Recorrido: id (int)
 
 (define (getchatbot-id chatbot)
   (car chatbot))
 
 
+;Retorna el nombre de un chatbot
+;Dominio: chatbot (list)
+;Recorrido: name (string)
+
 (define (getchatbot-name chatbot)
   (cadr chatbot))
 
+
+;Retorna el mensaje de un chatbot
+;Dominio: chatbot (list)
+;Recorrido: message chatbot (string)
 
 (define (getchatbot-msg chatbot)
   (caddr chatbot))
 
 
+;Retorna el startflowid de un chatbot
+;Dominio: chatbot (list)
+;Recorrido: startflowid (int)
+
 (define (getchatbot-startflowid chatbot)
   (cadddr chatbot))
+
+
+;Retorna los flows de un chatbot
+;Dominio: chatbot (list)
+;Recorrido: flows (list)
 
 (define (getchatbot-flows chatbot)
   (cadddr (cdr chatbot)))
 
+
+;Retorna el id de un flow de la lista de flows de un chatbot/ Usada para revisar flows repetidos dentro de un chatbot
+;Dominio: lista flows (list)
+;Recorrido: id (int)
+
 (define (getchatbotflows-code flows)
   (car flows))
+
+
+;Encuentra y retorna el flow inicial de un chatbot
+;Dominio: lista flows (list) X idFlowinitial (int)
+;Recorrido: Flow inicial (list)
+
+(define (iniflowops-chatbot idflow-chatbot flows-chatbot)
+  (if (eq? idflow-chatbot (car (car flows-chatbot) ))
+      (car flows-chatbot)
+      (iniflowops-chatbot idflow-chatbot (cdr flows-chatbot))))
+
+
+;Encuentra y retorna el flow inicial de un chatbot de forma no recursiva
+;Dominio: lista flows (list) X idFlowinitial (int)
+;Recorrido: Flow inicial (list)
+
+(define (iniflowops-chatbot-norec idflow-chatbot flows-chatbot)
+  (let ((flow-matches-ini-code?
+         (lambda (flow)
+           (eq? (car flow) idflow-chatbot))))
+  (car (filter flow-matches-ini-code? flows-chatbot))))
+
+
+;Capa Modificador
+
+
+;Añade un flow nuevo a un chatbot
+;Dominio: chatbot (list) X flow (list)
+;Recorrido: chatbot (list)
 
 (define (añadir-flow-chatbot chatbot flow)
   (cons (getchatbot-id chatbot) (cons (getchatbot-name chatbot) (cons (getchatbot-msg chatbot) (cons (getchatbot-startflowid chatbot) (cons (juntar-chatbot-flow chatbot flow) null))))))
 
+
+;Función auxiliar para juntar el flow nuevo con la lista de flows
+;Dominio: chatbot (list) X flow (list)
+;Recorrido: flows (list)
+
 (define (juntar-chatbot-flow chatbot flow)
   (reverse(cons flow (reverse (getchatbot-flows chatbot)))))
 
-(provide getchatbot-id getchatbot-flows getchatbotflows-code añadir-flow-chatbot)
+
+;Actualiza un chatbot que ahora tendrá un flow inicial nuevo
+;Dominio: chatbot (list) X newstartflow-id (int)
+;Recorrido: chatbot (list)
+(define (chatbot-startflow-update chatbot newstartflow-id)
+  (cons (getchatbot-id chatbot)
+        (cons (getchatbot-name chatbot)
+              (cons (getchatbot-msg chatbot)
+                    (cons newstartflow-id
+                          (cons (getchatbot-flows chatbot) null))))))
+
+
+(provide getchatbot-id getchatbot-flows getchatbotflows-code añadir-flow-chatbot iniflowops-chatbot chatbot-startflow-update iniflowops-chatbot-norec)
