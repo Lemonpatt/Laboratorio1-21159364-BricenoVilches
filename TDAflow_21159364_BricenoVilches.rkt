@@ -69,7 +69,7 @@
 
 ;Muestra las opciones de un flow elegido por el chatbot al conversar con este
 ;Dominio: lista de opciones
-;Recorrido: NA
+;Recorrido: Muestra string en consola 
 
 (define (show-options list-options)
   (if (null? (cdr list-options))
@@ -83,7 +83,7 @@
 
 ;Lo mismo que show-options pero de manera no recursiva para el requisito funcional 13
 ;Dominio: lista de opciones
-;Recorrido: NA
+;Recorrido: Muestra string en consola
 (define (show-options-norec list-options)
   (map
    (lambda (option)

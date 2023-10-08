@@ -57,9 +57,10 @@
   (let ((ini-code (getsystem-inicbcodelink system))
         (chatbots (getsystem-chatbots system)))
     (define (getchatbot-initial2 ini-code chatbots)
+      (if (null? chatbots) null
       (if (eq? (car (car chatbots))  ini-code)
           (car chatbots)
-          (getchatbot-initial2 ini-code (cdr chatbots))))
+          (getchatbot-initial2 ini-code (cdr chatbots)))))
     (getchatbot-initial2 ini-code chatbots)))
 
 
@@ -74,7 +75,8 @@
          (lambda (chatbot)
            (eq? (car chatbot) (getsystem-inicbcodelink system))))
         (chatbots (getsystem-chatbots system)))
-    (car(filter chatbot-matches-ini-code? chatbots))))
+    (if (null? (filter chatbot-matches-ini-code? chatbots)) null
+        (car(filter chatbot-matches-ini-code? chatbots)))))
 
 
 ;Capa modificador
@@ -251,7 +253,8 @@
 ;Rec: boolean
 
 (define (user-presente? system user)
-  (not(member (string-downcase (car user)) (map string-downcase(map car (getsystem-users system))))))
+  (if (null? user) #t
+  (not(member (string-downcase (car user)) (map string-downcase(map car (getsystem-users system)))))))
 
 
 

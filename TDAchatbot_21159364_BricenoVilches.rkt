@@ -54,7 +54,7 @@
   (car flows))
 
 
-;Encuentra y retorna el flow inicial de un chatbot
+;Encuentra y retorna el flow inicial de un chatbot haciendo uso de recursión natural para hacer una comparación de los elementos de la lista de flows y ver si se encuentra una id igual
 ;Dominio: lista flows (list) X idFlowinitial (int)
 ;Recorrido: Flow inicial (list)
 
@@ -86,12 +86,15 @@
   (cons (getchatbot-id chatbot) (cons (getchatbot-name chatbot) (cons (getchatbot-msg chatbot) (cons (getchatbot-startflowid chatbot) (cons (juntar-chatbot-flow chatbot flow) null))))))
 
 
-;Función auxiliar para juntar el flow nuevo con la lista de flows
+;Función auxiliar que contiene la recursion de cola pedida para juntar el flow nuevo al final de la lista de flows
 ;Dominio: chatbot (list) X flow (list)
 ;Recorrido: flows (list)
 
 (define (juntar-chatbot-flow chatbot flow)
-  (reverse(cons flow (reverse (getchatbot-flows chatbot)))))
+  (define (juntar-chatbot-flow-tail list-flows flow acc)
+    (if (null? list-flows) (append acc (list flow))
+        (juntar-chatbot-flow-tail (cdr list-flows) flow (append acc (list(car list-flows))))))
+  (juntar-chatbot-flow-tail (getchatbot-flows chatbot) flow null))
 
 
 ;Actualiza un chatbot que ahora tendrá un flow inicial nuevo

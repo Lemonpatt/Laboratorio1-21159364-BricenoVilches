@@ -22,14 +22,14 @@
 
 
 ;Selector
-;Revisa si el nombre de un usuario se encuentra dentro de la lista de usuarios de un sistema y lo retorna 
+;Revisa si el nombre de un usuario se encuentra dentro de la lista de usuarios de un sistema y lo retorna sin importar la diferencia de case (mayusculas o minusculas)
 ;Dom: lista usuarios X username (string)
 ;Rec: usuario (list)
 
 (define(find-user list-users username)
-  (if (null? (filter (lambda (user) (string=? username (getuser-name user))) list-users))
+  (if (null? (filter (lambda (user) (string-ci=? username (getuser-name user))) list-users))
       '()
-      (car (filter (lambda (user) (string=? username (getuser-name user))) list-users))))
+      (car (filter (lambda (user) (string-ci=? username (getuser-name user))) list-users))))
 
 
 

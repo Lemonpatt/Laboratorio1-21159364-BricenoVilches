@@ -1,10 +1,14 @@
 #lang racket
 
+
+;RF 1 TDAS
+;Aquí se pueden observar los 6 TDAs pedidos más un archivo extra que contiene funciones desligadas de un TDA
 (require "TDAoption_21159364_BricenoVilches.rkt")
 (require "TDAflow_21159364_BricenoVilches.rkt")
 (require "TDAchatbot_21159364_BricenoVilches.rkt")
 (require "TDAuser_21159364_BricenoVilches.rkt")
 (require "TDAsystem_21159364_BricenoVilches.rkt")
+(require "FuncionesSystemSimulate_21159364_BricenoVilches.rkt")
 
 
 ;RF 2 TDA Option - constructor
@@ -18,11 +22,11 @@
 
 ;RF 3 TDA Flow - constructor
 ;Función crea una lista con los datos de un flow con ninguna o varias opciones sin repetir basandonos en su id usando una llave.
-;Dominio: id (int) X name-msg (String) X Option* (0 o más opciones)
+;Dominio: id (int) X name-msg (String) X Option* (0 o más opciones (listas))
 ;Recorrido: flow (list)
 
 (define (flow id name-msg . Option)
-  (list id name-msg (sort (remove-duplicates Option #:key getflowoption-code) < #:key getflowoption-code))) ;Para que las opciones queden ordenadas por su id
+  (list id name-msg (sort (remove-duplicates Option #:key get-option-code) < #:key get-option-code))) ;Para que las opciones queden ordenadas por su id
 
 
 ;RF 4 TDA Flow - modificador
@@ -70,7 +74,7 @@
 
 
 ;RF 8 TDA system - modificador
-;Función modificadora para añadir chatbots a un sistema
+;Función modificadora para añadir chatbots a un sistema, su recursion usada es de cola, dentro de funciones internas
 ;Dominio: system (list) X chatbot (list)
 ;Recorrido: system (list)
 
@@ -88,15 +92,15 @@
 
 (define (system-add-user system username)
   (let ((user (crear-user username)))
-  (if (no-duplicado? user (getsystem-users system))
-      (añadir-user-system system user)
-      system)))
+    (if (user-presente? system user)
+        (añadir-user-system system user)
+        system)))
 
 
 ;RF 10 TDA system - modificador
 ;Función que añade un usuario al parámetro de usuario-logeado del sistema
 ;Dominio: system (list) X user (list)
-;Recorrido: system (list) o texto de error (string)
+;Recorrido: system (list)
 
 (define (system-login system username)
   (let ((user (find-user (getsystem-users system) username)))
@@ -118,37 +122,101 @@
   (logout-user system))
 
 
+;RF 12 TDA system - otro
+;Función que permite interactuar con un chatbot de manera recursiva usando muchas funciones con recursiones
+;Dominio: system (list)
+;Recorrido: system (list) o texto de error (string)
 
 
-(define op1(option 1 "Que quiere saber?" 0 3 "viajar" "descuentos" "sobre nosotros" ))
-(define op11 (option 4 "Empresa" 0 3 "sobre nosotros" ))
-(define op2 (option 2 "Buscas noticias?" 1 1 "noticias" "quiero ver noticias" "Busco noticias"))
-(define op3 (option 3 "O quieres saber sobre nuevas ofertas en supermercados?" 1 1 "ofertas"))
-(define f1 (flow 1 "Flujo1: prueba" op1 op1 op11 op2 op1 op11 op2))
-(define f1-new (flow-add-option f1 op3))
-(define a (getflow-options f1))
-(define f10 (flow 3 "Flujo1 Principal Chatbot1"))
-(define f11 (flow-add-option f10 op1))
-(define f12 (flow-add-option f11 op2))
-(define cb10 (chatbot 0 "Asistente" "Bienvenido. ¿Qué te gustaría hacer?" 1))
-(define cbtest (chatbot 2 "Asistente" "Bienvenido. ¿Qué te gustaría hacer?" 1))
+(define (system-talk-rec system msg)
+  (let ((chatbot (getchatbot-initial system))
+        (idflow-chatbot (if (null? (getchatbot-initial system))null (list-ref (getchatbot-initial system) 3)))
+        (flows-chatbot (if (null? (getchatbot-initial system))null(list-ref (getchatbot-initial system) 4))))
+    (if (logged? system)  ;Hace que funcione solo si hay alguien logeado
+        (if (not(null? chatbot))
+            (if (not(null?  flows-chatbot))
+            
+                (if (null? (get-eleccion-op (list-ref(iniflowops-chatbot idflow-chatbot flows-chatbot) 2) msg))
+                    (begin
+                      ;(show-conversation system msg) ;Habilitar en caso de querer ver un display de la interacción
+                      ;(system-talk-rec system (read-line)))  Recursión de la función eliminada ya que no permitía al sistema nuevo definido guardar el historial de Chat completo
+                      (update-talk-rec-sin-interaccion system msg))
+                    (begin
+                      ;(show-conversation (update-talk-rec system msg) msg) ;Habilitar en caso de querer ver un display de la interacción
+                      ;(system-talk-rec (update-talk-rec system msg) (read-line)))) Parte de la razón descrita arriba
+                      (update-talk-rec system msg)))
+                "No se encuentra Flow\n")
+            "No se encuentra Chatbot\n")
+        "No hay Usuario logeado\n")))
 
-(define cb11 (chatbot-add-flow cb10 f1))
-(define cb12 (chatbot-add-flow cb11 f1-new))
-(define cb13 (chatbot-add-flow cb12 f12))
-(define s1 (system "NewSystem" 0 cb13))
-(define s11(system-add-chatbot s1 cbtest))
-(define s-user(system-add-user s11 "admin"))
-(define s-user1(system-add-user s-user "user1"))
-(define s-user2(system-add-user s-user1 "user2"))
-(define re(getsystem-chatbots s-user))
-(define usuario-log (system-login s-user1 "user1"));añade usuario admin a la lista de logeados
-usuario-log
-(define sss(getsystem-users usuario-log))
-(define usuario-log1 (system-login usuario-log "user1")) ;falla ya que hay alguien loggeado ya
-(define usuario-log2 (system-login s-user "user2")) ;falla ya que no encuentra al usuario en el sistema
-(define logout (system-logout usuario-log))
+
+;RF 13 TDA system - otro
+;Función que permite interactuar con un chatbot de manera totalmente declarativa sin ninguna recursión explícita en sus funciones usadas
+;Dominio: system (list) X msg (string)
+;Recorrido: system (list) o texto de error (string)
 
 
 
-(provide flow flow-add-option chatbot chatbot-add-flow system system-add-chatbot system-add-user system-login system-logout system-talk-rec system-talk-norec system-synthesis system-simulate)
+(define (system-talk-norec system msg)
+  (let ((chatbot (getchatbot-initial-norec system))
+        (idflow-chatbot (if (null? (getchatbot-initial-norec system))null(list-ref (getchatbot-initial-norec system) 3)))
+        (flows-chatbot (if (null? (getchatbot-initial-norec system))null(list-ref (getchatbot-initial-norec system) 4))))
+    (if (logged? system)  ;Hace que funcione solo si hay alguien logeado
+        (if (not(null? chatbot))
+        (if (not(null? flows-chatbot))
+            (if (null? (get-eleccion-op-norec (list-ref(iniflowops-chatbot-norec idflow-chatbot flows-chatbot) 2) msg))
+                (begin
+                  ;(show-conversation-norec system msg) ;Habilitar en caso de querer ver un display de la interacción
+                  (update-talk-norec-sin-interaccion system msg))
+                (begin
+                  ;(show-conversation-norec (update-talk-norec system msg) msg) ;Habilitar en caso de querer ver un display de la interacción
+                  (update-talk-norec system msg)))
+            "No se encuentra Flow\n")
+        "No se encuentra Chatbot\n")
+        "No hay Usuario logeado\n")))
+
+;RF 14 TDA system - otro
+;Función que muestra una síntesis del chatbot para un usuario particular a partir de chatHistory contenido dentro del sistema
+;Dominio: system (list) X usuario (string)
+;Recorrido: chathistory o texto de error (string)
+
+
+(define (system-synthesis system usuario)
+  (let ((user (find-user (getsystem-users system) usuario)))
+    (if (user-presente? system user)
+        "Usuario no se encuentra en el sistema\n"
+        (if (and (logged? system) (string-ci=? (car (getsystem-loggeduser system)) usuario))
+            (if (null? (cadr (getsystem-loggeduser system)))
+                "Historial vacío\n"
+                (cadr (getsystem-loggeduser system)))
+            (if (null? (cadr user))  ;Busca que esté ahora guardado en su instancia de usuario logeado ya que solo se guarda al deslogear en la lista
+                "Historial vacío\n"
+                (cadr user))))))
+
+;RF 15 TDA system - otro
+;Función que simula una conversación con el sistema a través de una función que crea números pseudo aleatorios tomando el primer digito de este y usándolo como una elección en el chatbot
+;Usa recursion natural dentro de otra funcion definida dentro para asi poder guardar en nombre del usuario definido
+;Dominio: system (list) X maxInteractions (int) X seed (int)
+;Recorrido: system (list) o texto de error (string)
+
+(define (system-simulate system maxInteractions seed)
+  (let ((usuario-generado (string-append "user" (number->string seed))))
+    (define (simulate-seed system maxInteractions seed)
+    (if (string? system) system ;Esto es en caso de que algunas de las funciones al emular la conversacion retorne un string de error Ej:No hay usuario logeado
+        (if (eq? maxInteractions 0)
+            system
+            (if (logged? system)
+                (if (string=? (car (getsystem-loggeduser system)) usuario-generado)
+                    (if (>= (get-primer-num seed) 6)  ;Agregado para reducir la cantidad de opciones muertas en la prueba como lo son dígitos muy altos
+                        (simulate-seed (system-talk-rec system (number->string (-(get-primer-num seed) 5)))
+                                         (- maxInteractions 1) (remove-primer-digit (myRandom seed)))
+          
+                        (simulate-seed (system-talk-rec system (number->string (get-primer-num seed) ))
+                                         (- maxInteractions 1) (remove-primer-digit (myRandom seed))))
+                    (simulate-seed (system-login (system-add-user (system-logout system) usuario-generado) usuario-generado) maxInteractions seed))
+                (simulate-seed (system-login (system-add-user system usuario-generado) usuario-generado) maxInteractions seed)))))
+  (simulate-seed system maxInteractions seed)))
+
+
+
+(provide option flow flow-add-option chatbot chatbot-add-flow system system-add-chatbot system-add-user system-login system-logout system-talk-rec system-talk-norec system-synthesis system-simulate)
