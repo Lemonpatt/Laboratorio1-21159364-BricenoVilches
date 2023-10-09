@@ -50,7 +50,7 @@
 
 
 ;RF 6 TDA Chatbot - modificador
-;Función que añade un flujo a un chatbot solo si este no está repetido en base a su ID único
+;Función que añade un flujo a un chatbot solo si este no está repetido en base a su ID único, haciendo uso de recursión de cola
 ;Dominio: chatbot (list) X flow (list)
 ;Recorrido: chatbot (list)
 
@@ -74,7 +74,7 @@
 
 
 ;RF 8 TDA system - modificador
-;Función modificadora para añadir chatbots a un sistema, su recursion usada es de cola, dentro de funciones internas
+;Función modificadora para añadir chatbots a un sistema y verifica que no se repita la id
 ;Dominio: system (list) X chatbot (list)
 ;Recorrido: system (list)
 
@@ -87,7 +87,7 @@
 
 ;RF 9 TDA system - modificador
 ;Función modificadora para añadir usuarios a un sistema
-;Dominio: system (list) X user (list)
+;Dominio: system (list) X username (string)
 ;Recorrido: system (list)
 
 (define (system-add-user system username)
@@ -99,7 +99,7 @@
 
 ;RF 10 TDA system - modificador
 ;Función que añade un usuario al parámetro de usuario-logeado del sistema
-;Dominio: system (list) X user (list)
+;Dominio: system (list) X username (string)
 ;Recorrido: system (list)
 
 (define (system-login system username)
@@ -195,7 +195,7 @@
 
 ;RF 15 TDA system - otro
 ;Función que simula una conversación con el sistema a través de una función que crea números pseudo aleatorios tomando el primer digito de este y usándolo como una elección en el chatbot
-;Usa recursion natural dentro de otra funcion definida dentro para asi poder guardar en nombre del usuario definido
+;Usa recursion natural dentro de otra funcion definida dentro para asi poder guardar el nombre del usuario definido
 ;Dominio: system (list) X maxInteractions (int) X seed (int)
 ;Recorrido: system (list) o texto de error (string)
 
